@@ -1,0 +1,36 @@
+name: Build macOS App
+
+# 手动触发 或 推送到main分支时触发
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 执行打包脚本
+        run: |
+          chmod +x build_exe_mac.sh
+          ./build_exe_mac.sh
+
+      - name: 压缩.app应用包（保留macOS元数据）
+        run: |
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent "文档转图片工具.app" "doc-to-image-tool-mac.zip"
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-app
+          path: dist/doc-to-image-tool-mac.zip
+          retention-days: 30
